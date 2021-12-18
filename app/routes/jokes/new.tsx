@@ -7,9 +7,11 @@ import {
   redirect,
   useActionData,
   useCatch,
-  useLocation
+  useLocation,
+  useTransition
 } from 'remix';
 
+import { JokeDisplay } from '~/components/joke';
 import { db } from '~/services/db.server';
 import { getUserId, requireUserId } from '~/services/session.server';
 import { buildMeta } from '~/utils/head';
@@ -108,6 +110,26 @@ export const meta: MetaFunction = () => {
 
 export default function NewJokeRoute() {
   const actionData = useActionData<ActionData>();
+  const transition = useTransition();
+
+  if (transition.submission) {
+    const name = transition.submission.formData.get('jokeName');
+    const content = transition.submission.formData.get('jokeContent');
+    if (
+      typeof name === 'string' &&
+      typeof content === 'string' &&
+      !validateJokeContent(content) &&
+      !validateJokeName(name)
+    ) {
+      return (
+        <JokeDisplay
+          joke={{ name, content, jokesterId: '' }}
+          isOwner
+          canDelete={false}
+        />
+      );
+    }
+  }
 
   return (
     <div>
@@ -164,9 +186,7 @@ export function CatchBoundary() {
     return (
       <div className='error-container'>
         <p>You must be logged in to create a joke.</p>
-        <Link to={{ pathname: '/login', search: `?redirectTo=${pathname}${search}` }}>
-          Login
-        </Link>
+        <Link to={{ pathname: '/login', search: `?redirectTo=${pathname}${search}` }}>Login</Link>
       </div>
     );
   }

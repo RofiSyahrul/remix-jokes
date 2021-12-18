@@ -1,8 +1,6 @@
 import { Joke } from '@prisma/client';
 import {
   ActionFunction,
-  Form,
-  Link,
   LoaderFunction,
   MetaFunction,
   redirect,
@@ -11,6 +9,7 @@ import {
   useParams
 } from 'remix';
 
+import { JokeDisplay } from '~/components/joke';
 import { db } from '~/services/db.server';
 import { getUserId, requireUserId } from '~/services/session.server';
 import { buildMeta } from '~/utils/head';
@@ -44,7 +43,14 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export const meta: MetaFunction = (args) => {
   const data = args.data as LoaderData;
 
-  return buildMeta({ title: data?.joke.name ?? undefined });
+  if (!data) {
+    return buildMeta({ title: 'No joke', description: 'No joke found' });
+  }
+
+  return buildMeta({
+    title: data.joke.name ?? undefined,
+    description: `Enjoy the "${data.joke.name}" joke and much more`
+  });
 };
 
 type FormKey = '_method' | 'jokesterId';
@@ -67,30 +73,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 export default function JokeRoute() {
   const data = useLoaderData<LoaderData>();
 
-  return (
-    <div>
-      <p>Here's your hilarious joke:</p>
-      <p>{data.joke.content}</p>
-      <Link to='.'>{`${data.joke.name} Permalink`}</Link>
-      {data.isOwner && (
-        <Form method='post'>
-          <input
-            type='hidden'
-            name='_method'
-            value='delete'
-          />
-          <input
-            type='hidden'
-            name='jokesterId'
-            value={data.joke.jokesterId}
-          />
-          <button type='submit' className='btn'>
-            Delete
-          </button>
-        </Form>
-      )}
-    </div>
-  );
+  return <JokeDisplay joke={data.joke} isOwner={data.isOwner} />;
 }
 
 export function CatchBoundary() {
@@ -102,16 +85,11 @@ export function CatchBoundary() {
       return <div className='error-container'>Huh? What the heck is "{params.jokeSlug}"?</div>;
     }
     case 401: {
-      return (
-        <div className='error-container'>
-          Sorry, but {params.jokeSlug} is not your joke.
-        </div>
-      );
+      return <div className='error-container'>Sorry, but {params.jokeSlug} is not your joke.</div>;
     }
     default: {
       throw new Error(`Unhandled error: ${caught.status}`);
     }
-
   }
 }
 
