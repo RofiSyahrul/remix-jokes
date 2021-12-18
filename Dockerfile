@@ -43,6 +43,7 @@ RUN yarn build
 FROM base
 
 ENV NODE_ENV production
+ENV PORT 8080
 
 RUN mkdir /app
 WORKDIR /app
@@ -53,6 +54,6 @@ COPY --from=build /app/build /app/build
 COPY --from=build /app/public /app/public
 ADD . .
 
-EXPOSE 8080
+EXPOSE ${PORT}
 
 CMD ["yarn", "start"]
