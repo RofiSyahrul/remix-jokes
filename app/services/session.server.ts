@@ -88,7 +88,8 @@ export async function requireUserId(request: Request, redirectTo?: string) {
 }
 
 export async function logout(request: Request) {
-  const { redirectTo } = await getForm<'redirectTo'>(request);
+  const formField = await getForm<'redirectTo'>(request);
+  const redirectTo = formField.redirectTo ?? request.url;
   if (typeof redirectTo !== 'string') {
     return badRequest({ formError: `Form not submitted correctly.` });
   }
@@ -110,6 +111,7 @@ export async function getUser(request: Request) {
     const user = await db.user.findUnique({
       where: { id: userId }
     });
+    if (!user) throw logout(request);
     return user;
   } catch {
     throw logout(request);
