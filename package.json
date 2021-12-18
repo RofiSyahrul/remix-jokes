@@ -16,6 +16,7 @@
     "dev": "PORT=8003 node -r dotenv/config node_modules/.bin/remix dev",
     "build:local": "yarn generate-manifest && node -r dotenv/config node_modules/.bin/remix build",
     "start:local": "node -r dotenv/config node_modules/.bin/remix-serve build",
+    "postinstall": "remix setup node",
     "start": "remix-serve build",
     "seed": "node -r esbuild-register -r dotenv/config prisma/seed.ts",
     "push-db": "prisma db push"
